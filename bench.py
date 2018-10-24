@@ -80,6 +80,12 @@ class CBuildSystem (BuildSystem):
         self.outfile = self.infile.replace(".c", "")
         return "%s -O2 %s -o %s" % (config.general.binary_clang, abspath(join(self.source_directory, self.infile)), abspath(join(self.out_directory, self.outfile)))
 
+class CPPBuildSystem (BuildSystem):
+    name = "C++"
+    def build(self):
+        self.outfile = self.infile.replace(".cpp", "")
+        return "%s -std=c++17 -O2 %s -o %s" % (config.general.binary_clangcpp, abspath(join(self.source_directory, self.infile)), abspath(join(self.out_directory, self.outfile)))
+
 class CargoBuildSystem (BuildSystem):
     name = "Rust"
     def perform_in_cargo(self, command, ret = False):
@@ -266,6 +272,7 @@ def build_system_factory(in_dir, out_dir):
         elif language == "rs": return RustBuildSystem(infile, in_dir, out_dir)
         elif language == "kt": return KotlinBuildSystem(infile, in_dir, out_dir)
         elif language == "c": return CBuildSystem(infile, in_dir, out_dir)
+        elif language == "cpp": return CPPBuildSystem(infile, in_dir, out_dir)
     return fn
 
 def clear_builds(out_dir):
@@ -281,6 +288,7 @@ def make_benches():
         bencher.bench_entry(title, builder("prime_swift.swift"))
         bencher.bench_entry(title, builder("prime_rust.rs"))
         bencher.bench_entry(title, builder("prime_kotlin.kt"))
+        bencher.bench_entry(title, builder("prime_cpp.cpp"))
     if config.active.strings_functional:
         title = config.titles.strings_functional_title
         bencher.bench_entry(title, builder("strings_functional_swift.swift"))
