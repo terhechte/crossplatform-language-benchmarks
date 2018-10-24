@@ -1,0 +1,13 @@
+Benchmark,Kotlin,C,Swift,Rust
+Compile: Primes Functional,24.45,,3.67,2.4
+Primes Functional,119.282,,3.4180000000000006,1.184
+Compile: Strings Functional,21.01,,4.05,0.45
+Strings Functional,2.338,,3.4099999999999993,0.052000000000000005
+Compile: Strings Imperative,19.56,,1.3,0.43
+Strings Imperative,1.94,,2.9299999999999997,0.052000000000000005
+Compile: Chunks Functional,21.12,1.82,0.91,0.42
+Chunks Functional,0.0,0.842,10.361999999999998,0.812
+Compile: Chunks Imperative,27.89,0.21,1.02,1.17
+Chunks Imperative,9.548,0.882,1.014,1.2200000000000002
+Compile: JSON,,,1.53,51.05
+JSON,,,4.26,0.23399999999999999
