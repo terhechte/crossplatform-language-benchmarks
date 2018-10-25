@@ -277,6 +277,7 @@ def build_system_factory(in_dir, out_dir):
 
 def clear_builds(out_dir):
     for f in os.listdir(out_dir):
+        if f == "empty": continue
         os.remove(abspath(join(out_dir, f)))
 
 def make_benches():
@@ -294,11 +295,13 @@ def make_benches():
         bencher.bench_entry(title, builder("strings_functional_swift.swift"))
         bencher.bench_entry(title, builder("strings_functional_rust.rs"))
         bencher.bench_entry(title, builder("strings_functional_kotlin.kt"))
+        bencher.bench_entry(title, builder("strings_functional_cpp.cpp"))
     if config.active.strings_imperative:
         title = config.titles.strings_imperative_title
         bencher.bench_entry(title, builder("strings_imperative_swift.swift"))
         bencher.bench_entry(title, builder("strings_imperative_rust.rs"))
         bencher.bench_entry(title, builder("strings_imperative_kotlin.kt"))
+        bencher.bench_entry(title, builder("strings_imperative_cpp.cpp"))
     if config.active.chunks_functional:
         title = config.titles.chunks_functional_title
         bencher.bench_entry(title, builder("chunks_functional_swift.swift"))

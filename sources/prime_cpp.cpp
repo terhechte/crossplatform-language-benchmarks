@@ -19,5 +19,5 @@ int main (int argc, char *argv[]) {
       a += 1;
     }
   }
-  cout << a;
+  cout << "\n" << a << "\n";
 }

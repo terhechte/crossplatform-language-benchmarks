@@ -30,7 +30,6 @@ inline std::optional<int> operate(const std::string &s) {
   auto trimmed = trim(s);
   try {
     auto number = std::stoi(trimmed);
-    if (number < 100)return {};
     return number;
   }
   catch (int ) {
@@ -39,16 +38,22 @@ inline std::optional<int> operate(const std::string &s) {
 }
 
 int test(std::string str) {
+  // I found it tricky to use a fully functional C++ version without external libraries such as
+  // boost.
+  // So, instead, enjoy this half-hearted attempt
   auto contents = split(str, ',');
-  std::vector<std::optional<int>> result; 
-  result.resize(contents.size());
-  std::transform(contents.begin(), contents.end(), result.begin(), operate);
-  //return std::accumulate(result.begin(), result.end(), 0);
-  return std::accumulate(result.begin(), result.end(), 0,
-                         [](std::optional<int> a, int std::optional<int> b) {
-                           return 0;
-                           //return b; //b + a.value_or(0);
-                         });
+  std::vector<std::optional<int>> converted; 
+  converted.resize(contents.size());
+  std::transform(contents.begin(), contents.end(), converted.begin(), operate);
+  auto sum = 0;
+  for (std::optional<int> n: converted) {
+    if (n.has_value() ) {
+      if (n.value() < 100) {
+        sum += n.value();
+      }
+    }
+  }
+  return sum;
 }
 
 int main (int argc, char *argv[]) {
@@ -59,5 +64,5 @@ int main (int argc, char *argv[]) {
   strStream << inFile.rdbuf();
   std::string str = strStream.str();
 
-  test(str);
+  std::cout << "\n" << test(str) << "\n";
 }
