@@ -112,6 +112,35 @@ class CargoBuildSystem (BuildSystem):
         target_path = abspath(join(self.out_directory, self.infile))
         os.system("cp %s %s" % (source_path, target_path))
 
+class GradleBuildSystem (BuildSystem):
+    name = "Kotlin"
+    def perform_in_gradle(self, command, ret = False):
+        if ret:
+            return command
+        else:
+            self.execute(command)
+
+    def gradle_bin(self):
+        return abspath(join(self.source_directory, self.infile, "gradlew"))
+
+    def build_cwd(self):
+        return abspath(join(self.source_directory, self.infile))
+
+    def clean(self):
+        print self.gradle_bin()
+        self.perform_in_gradle("%s clean" % (self.gradle_bin(),))
+
+    def build(self):
+        self.outfile = self.infile
+        return self.perform_in_gradle("%s compileReleaseKotlinNative" % (self.gradle_bin()), ret = True)
+
+    def postbuild(self):
+        source_path = abspath(join(self.source_directory, self.infile, 
+            join("build", "exe", "main", "release"), 
+            "%s.kexe" % (self.outfile,)))
+        target_path = abspath(join(self.out_directory, self.infile))
+        os.system("cp %s %s" % (source_path, target_path))
+
 class BenchResult:
     name = ""
     language = ""
@@ -182,6 +211,9 @@ class Bencher:
                 fail_result.is_fail = True
                 return fail_result
         output = process.stdout.read()
+        print "---"
+        print output
+        print "---"
         for line in output.split("\n"):
             if line.find("real") >= 0 or line.find("user") >= 0 or line.find("sys") >= 0:
                 self.split_load(line, result)
@@ -318,6 +350,7 @@ def make_benches():
         title = config.titles.json_title
         bencher.bench_entry(title, builder("json_swift.swift"))
         bencher.bench_entry(title, CargoBuildSystem("json_rust", config.directories.source_directory, config.directories.build_directory))
+        bencher.bench_entry(title, GradleBuildSystem("json_kotlin", config.directories.source_directory, config.directories.build_directory))
 
     bencher.write_bench_csv(config.directories.bench_csv_directory)
     bencher.write_bench_pickle(config.directories.bench_csv_directory)
