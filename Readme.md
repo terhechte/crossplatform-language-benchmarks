@@ -203,6 +203,14 @@ If you desire to generate markdown charts, simply run:
 python ./bench.py charts
 ```
 
+You can also generate kinda fancy HTML charts via
+
+``` bash
+python ./bench.py html_charts
+```
+
+(warning, the code for this is *messy*)
+
 # Requirements:
 
 If you don't fulfill any of these requirements, you can disable them in the `bench.cfg` (except for Python, obviously).

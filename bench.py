@@ -381,12 +381,98 @@ def make_charts():
         charts.append(make_chart(abspath(join(config.directories.bench_csv_directory, f))))
     print "\n\n".join(charts)
 
+def make_html_charts(filename):
+    """Goes through all the csv files, and renders them as html charts. Terrible Code."""
+    colors = [
+            ["Navy", "#001f3f", "#000e2e"],
+            ["Blue", "#0074D9", "#0063c8"],
+            ["Aqua", "#7FDBFF", "#6ecaee"],
+            ["Maroon", "#85144b", "#74033a"],
+            ["Olive", "#3D9970", "#2c8860"],
+            ["Teal", "#39CCCC", "#28bbbC"],
+            ["Fuchsia", "#F012BE", "#e001ac"]]
+    tmpl = """
+    <html><style>
+    * {
+  font-family: -apple-system, "avenir next", avenir, roboto, noto, ubuntu, "helvetica neue", helvetica, arial, sans-serif;
+  font-size: 15px;
+    }
+    div.chart {
+    padding: 5px;
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    }
+.chart div.bar {
+  background-color: #faca00;
+  text-align: right;
+  padding: 3px;
+  margin: 1px;
+  color: tan;
+  height: 20px;
+  border: 2px solid #e9b900;
+  border-radius: 3px;
+}
+.row-title {
+  font-weight: bold;
+}
+.bar {
+float: left;
+}
+table {
+}
+span.time {
+  font-weight: bold;
+  font-size: 13px;
+  padding-top: 10px;
+  padding-left: 3px;
+float: left;
+}
+</style><body>%s</body></html>"""
+    name = os.path.splitext(os.path.basename(filename))[0]
+    output = ""
+    with open(filename, "r") as csvfile:
+        reader = csv.DictReader(csvfile)
+        fields = reader.fieldnames
+        output += "<div class='charts'><h2>%s</h2>" % (filename,)
+        max_width = 700
+        chart_title_width = 50
+        chart_sec_width = 70
+        for row in reader:
+            output += "<div class='chart'><h3>%s</h3>" % (row["Benchmark"],)
+            output += '<table class="chart" style="width: %spx">' % (max_width,)
+            # calculate the max value
+            xmax = 0.0
+            for field in fields:
+                try:
+                    s = float(row[field])
+                    if s > xmax: xmax = s
+                except: 
+                    pass
+            cnt = 0
+            for field in fields:
+                if field == "Benchmark": continue
+                if len(row[field]) == 0: continue
+                color = colors[cnt]
+                output += "<tr>"
+                output += '<td class="row-title" style="width: %spx" vertical-align="middle">%s</td>' % (chart_title_width, field)
+                val = float(row[field])
+                calc_percent = val / xmax
+                calc_width = (max_width - (chart_title_width + chart_sec_width)) * calc_percent
+                color_block = "background-color: %s; border-color: %s" % (color[1], color[2])
+                output += '<td style="width: 100%%"><div class="bar" style="%s; width: %spx;"></div><span class="time">%s s</span></td>' % (color_block, int(calc_width), round(val, 2))
+                output += "</tr>"
+                cnt += 1
+            output += '</table>'
+            output += '</div>'
+        print tmpl % (output,)
+
 def usage():
     print """
     Usage:
       python ./bench.py [task]
         Tasks:
          "charts": Will render all charts in 'benches/' to markdown and print them
+         "html_charts path/to/bench.csv": Will render all charts in 'benches/' to markdown and print them
          "bench": Will run all activated benchmarks, and write to the 'benches/' directory
     """
     sys.exit()
@@ -403,5 +489,10 @@ if __name__ == "__main__":
         make_charts()
     elif command == "bench":
         make_benches()
+    elif command == "html_charts":
+        try:
+            make_html_charts(sys.argv[2])
+        except IndexError:
+            usage()
     else:
         usage()
