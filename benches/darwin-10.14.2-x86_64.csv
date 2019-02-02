@@ -10,4 +10,5 @@ Chunks Functional,0.0,0.594,8.066,,0.692
 Compile: Chunks Imperative,13.92,0.12,0.41,,0.67
 Chunks Imperative,5.756,0.67,0.696,,0.764
 Compile: JSON,33.28,,0.77,,23.81
+Compile: JSON with pre-build deps,1.15,,0.77,,0.13
 JSON,15.824000000000002,,2.308,,0.17400000000000002
