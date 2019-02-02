@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 // We're using uint64_t as `usize` and `Int` in Rust / Swift also have 8byte
 

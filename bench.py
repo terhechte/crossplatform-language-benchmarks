@@ -218,15 +218,15 @@ class Bencher:
         return (cmd, parse_fn)
 
     def bench_for_linux(self, command, result):
-        fmt = "real:%e\nuser:%U\nsys:%S\nresidentset:%M\nreclaims:%t\n"
+        fmt = "xbench-real:%e\nxbench-user:%U\nxbench-sys:%S\nxbench-residentset:%M\nxbench-reclaims:%t\n"
         cmd = ["/usr/bin/time", "-f", fmt] + command.split()
         def parse_fn(output):
             for line in output.split("\n"):
-		if line.find("user:"): result.user = float(line.split(":")[1])
-		if line.find("sys:"): result.sys = float(line.split(":")[1])
-		if line.find("real:"): result.real = float(line.split(":")[1])
-		if line.find("residentset:"): result.resident_set_size = float(line.split(":")[1])
-		if line.find("reclaims:"): result.page_reclaims = float(line.split(":")[1])
+		if line.find("xbench-user:") != -1: result.user = float(line.split(":")[1].strip())
+		if line.find("xbench-sys:") != -1: result.sys = float(line.split(":")[1].strip())
+		if line.find("xbench-real:") != -1: result.real = float(line.split(":")[1].strip())
+		if line.find("xbench-residentset:") != -1: result.resident_set_size = float(line.split(":")[1].strip())
+		if line.find("xbench-reclaims:") != -1: result.page_reclaims = float(line.split(":")[1].strip())
         return (cmd, parse_fn)
 
 
