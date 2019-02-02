@@ -218,7 +218,17 @@ class Bencher:
         return (cmd, parse_fn)
 
     def bench_for_linux(self, command, result):
-        pass
+        fmt = "real:%e\nuser:%U\nsys:%S\nresidentset:%M\nreclaims:%t\n"
+        cmd = ["/usr/bin/time", "-f", fmt] + command.split()
+        def parse_fn(output):
+            for line in output.split("\n"):
+		if line.find("user:"): result.user = float(line.split(":")[1])
+		if line.find("sys:"): result.sys = float(line.split(":")[1])
+		if line.find("real:"): result.real = float(line.split(":")[1])
+		if line.find("residentset:"): result.resident_set_size = float(line.split(":")[1])
+		if line.find("reclaims:"): result.page_reclaims = float(line.split(":")[1])
+        return (cmd, parse_fn)
+
 
     def bench_command(self, command, cwd):
         """run a command and return the timing"""
