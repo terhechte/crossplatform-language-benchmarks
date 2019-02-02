@@ -409,15 +409,15 @@ font-weight: 300;
     padding: 15px;
     background-color: #fafafa;
     border: 1px solid #ddd;
+    border-radius: 3px;
     }
 .chart div.bar {
-  background-color: #faca00;
   text-align: right;
   padding: 3px;
   margin: 1px;
-  color: tan;
   height: 20px;
-  border: 2px solid #e9b900;
+  border-width: 3px;
+  border: 3px solid #e9b900;
   border-radius: 3px;
 }
 .row-title {
@@ -450,7 +450,7 @@ display: block;
     chart_title_width = 60
     chart_sec_width = 70
 
-    def html_chart(name, field_values, max_value):
+    def html_chart(name, field_values, max_value, unit="s", round_fn=round):
         output = ""
         output += "<div class='chart'><h3>%s</h3>" % (name,)
         output += '<table class="chart" style="width: %spx">' % (max_width,)
@@ -465,10 +465,10 @@ display: block;
             if val == "FAIL":
                 output += '<td style="width: 100%%"><span class="alert">Kill after 10min</span></td></tr>'
                 continue
-            calc_percent = val / xmax
+            calc_percent = val / max_value
             calc_width = (max_width - (chart_title_width + chart_sec_width)) * calc_percent
             color_block = "background-color: %s; border-color: %s" % (color[1], color[2])
-            output += '<td style="width: 100%%"><div class="bar" style="%s; width: %spx;"></div><span class="time">%s s</span></td>' % (color_block, int(calc_width), round(val, 2))
+            output += '<td style="width: 100%%"><div class="bar" style="%s; width: %spx;"></div><span class="time">%s %s</span></td>' % (color_block, int(calc_width), round_fn(val, 2), unit)
             output += "</tr>"
         output += '</table>'
         output += '</div>'
@@ -478,6 +478,13 @@ display: block;
         fields = reader.fieldnames
         # we need some extra space
         charts_output = "<div style='width: %spx' class='charts'><h2>%s</h2>" % (max_width + chart_sec_width, filename,)
+
+        # build a compile_total and a run total
+        # all those values are percentage (0-1)
+        # ["rust"] = [0.1, 0.5]
+        # ["c"] = [0.1, 0.5]
+        compile_total = {}
+        run_total = {}
 
         for row in reader:
             # calculate the max value
@@ -497,8 +504,26 @@ display: block;
                 if s > xmax: 
                     xmax = s
                 field_values.append((field, s))
-
+            # calculate totals
+            for (k, v) in field_values:
+                # totals ignore C, C++ as they have not enough tests
+                if k in ["C", "C++"]: continue
+                try:
+                    s = float(v) / xmax
+                    if row["Benchmark"].startswith("Compile:"):
+                        if not compile_total.has_key(k): compile_total[k] = []
+                        compile_total[k].append(s)
+                    else:
+                        if not run_total.has_key(k): run_total[k] = []
+                        run_total[k].append(s)
+                except:
+                    pass
             charts_output += html_chart(row["Benchmark"], field_values, xmax)
+        def chart_with_total(name, total):
+            field_values = { (k, sum(v)/len(v) * 100) for k, v in total.iteritems() }
+            return html_chart(name, field_values, 100, unit="%", round_fn = lambda x, y: round(x, 0))
+        charts_output += chart_with_total("Compile Total %", compile_total)
+        charts_output += chart_with_total("Run Total %", run_total)
         print tmpl % (charts_output,)
 
 def usage():
