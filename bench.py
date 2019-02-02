@@ -479,6 +479,8 @@ display: block;
     chart_sec_width = 70
 
     def html_chart(name, field_values, max_value, unit="s", round_fn=round):
+        # sort the fields
+        field_values = sorted(field_values, key=lambda k: k[0])
         output = ""
         output += "<div class='chart'><h3>%s</h3>" % (name,)
         output += '<table class="chart" style="width: %spx">' % (max_width,)
@@ -501,6 +503,7 @@ display: block;
         output += '</table>'
         output += '</div>'
         return output
+
     with open(filename, "r") as csvfile:
         reader = csv.DictReader(csvfile)
         fields = reader.fieldnames

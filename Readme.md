@@ -218,6 +218,8 @@ python ./bench.py html_charts
 
 If you don't fulfill any of these requirements, you can disable them in the `bench.cfg` (except for Python, obviously).
 
+Also there's the option to do all this in Docker (see below)
+
 ## Python
 Python 2.7+
 
@@ -235,17 +237,70 @@ In order to install it, once `rust` / `cargo` is installed, run:
 ``` bash
 cargo install cargo-build-deps
 ```
-### Swift
+## Swift
 Follow the guides on:
 https://swift.org/getting-started/
 
-### Kotlin Native
+## Kotlin Native
 I installed it from the releases on their GitHub page here:
-https://github.com/JetBrains/kotlin-native
+It also requires Java :-(
+https://github.com/JetBrains/kotlin/releases/tag/v1.3.11
 
-### C
+## C
 If you use Xcode, Rust, or Swift, chances are high you already have it installed, otherwise ask a package manager of your choice, or look here:
 https://clang.llvm.org/
+
+# Docker
+There's a dockerfile that sets up a complete machine.
+
+`docker pull swift`
+`docker run -it -name swiftfun swift /bin/bash`
+
+# FIXME: Old versions of clang and libstdc++ don't support options.
+Solution would be to base the docker image on a more modern ubuntu
+and install swift via other means (maybe then also swift 5...)
+
+``` bash
+FROM swift:4.2
+LABEL maintainer="Benedikt Terhechte<terhechte@gmail.com>"
+LABEL Description=""
+
+# Install Rust / Cargo
+curl https://sh.rustup.rs -sSf | sh -s -- -y
+source $HOME/.profile
+apt update
+
+# we need the time utility
+apt-get install -y time
+
+# the 16.04 version of the openjdk doesn't work with gradle
+# https://github.com/gradle/gradle/issues/7829
+# Need add-apt-repository from software-properties-common
+apt-get install -y software-properties-common
+add-apt-repository -y ppa:openjdk-r/ppa
+apt update
+apt install -y openjdk-9-jre
+
+# Need wget to download kotlin-native
+# Kotlin-Native is not part of apt
+apt-get install -y wget
+wget -O "/tmp/kotlin.tgz" "https://github.com/JetBrains/kotlin/releases/download/v1.3.11/kotlin-native-linux-1.3.11.tar.gz" && tar xfz /tmp/kotlin.tgz -C /root/
+echo "export PATH=\"$HOME/kotlin-native-linux-1.3.11/bin:\$PATH\"" >> $HOME/.profile
+source $HOME/.profile
+
+# Get the benchmark
+apt-get install -y git
+git clone https://github.com/terhechte/crossplatform-language-benchmarks.git /root/crossplatform-language-benchmarks
+
+# Kotlin needs to download native dependencies once
+echo "fun main(args: Array<String>) {}" >> /tmp/deb.kt
+kotlinc /tmp/deb.kt
+# start the inital gradle download operations
+cd $HOME/crossplatform-language-benchmarks/sources/json_kotlin/ && ./gradlew
+echo "Done"
+```
+
+# now we have something
 
 # Resources
 
