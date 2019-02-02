@@ -436,45 +436,70 @@ span.time {
   padding-left: 3px;
 float: left;
 }
+span.alert {
+font-weight: bold;
+background-color: red;
+padding: 4px;
+border: 2px solid white;
+display: block;
+}
 </style><body>%s</body></html>"""
     name = os.path.splitext(os.path.basename(filename))[0]
-    output = ""
+
+    max_width = 700
+    chart_title_width = 60
+    chart_sec_width = 70
+
+    def html_chart(name, field_values, max_value):
+        output = ""
+        output += "<div class='chart'><h3>%s</h3>" % (name,)
+        output += '<table class="chart" style="width: %spx">' % (max_width,)
+        cnt = 0
+        for (field, val) in field_values:
+            # None val means wasn't measured
+            if val == None: continue
+            color = colors[cnt]
+            cnt += 1
+            output += "<tr>"
+            output += '<td class="row-title" style="width: %spx" vertical-align="middle">%s</td>' % (chart_title_width, field)
+            if val == "FAIL":
+                output += '<td style="width: 100%%"><span class="alert">Kill after 10min</span></td></tr>'
+                continue
+            calc_percent = val / xmax
+            calc_width = (max_width - (chart_title_width + chart_sec_width)) * calc_percent
+            color_block = "background-color: %s; border-color: %s" % (color[1], color[2])
+            output += '<td style="width: 100%%"><div class="bar" style="%s; width: %spx;"></div><span class="time">%s s</span></td>' % (color_block, int(calc_width), round(val, 2))
+            output += "</tr>"
+        output += '</table>'
+        output += '</div>'
+        return output
     with open(filename, "r") as csvfile:
-        max_width = 700
-        chart_title_width = 60
-        chart_sec_width = 70
         reader = csv.DictReader(csvfile)
         fields = reader.fieldnames
         # we need some extra space
-        output += "<div style='width: %spx' class='charts'><h2>%s</h2>" % (max_width + chart_sec_width, filename,)
+        charts_output = "<div style='width: %spx' class='charts'><h2>%s</h2>" % (max_width + chart_sec_width, filename,)
+
         for row in reader:
-            output += "<div class='chart'><h3>%s</h3>" % (row["Benchmark"],)
-            output += '<table class="chart" style="width: %spx">' % (max_width,)
             # calculate the max value
             xmax = 0.0
-            for field in fields:
-                try:
-                    s = float(row[field])
-                    if s > xmax: xmax = s
-                except: 
-                    pass
-            cnt = 0
+            field_values = []
             for field in fields:
                 if field == "Benchmark": continue
-                if len(row[field]) == 0: continue
-                color = colors[cnt]
-                output += "<tr>"
-                output += '<td class="row-title" style="width: %spx" vertical-align="middle">%s</td>' % (chart_title_width, field)
-                val = float(row[field])
-                calc_percent = val / xmax
-                calc_width = (max_width - (chart_title_width + chart_sec_width)) * calc_percent
-                color_block = "background-color: %s; border-color: %s" % (color[1], color[2])
-                output += '<td style="width: 100%%"><div class="bar" style="%s; width: %spx;"></div><span class="time">%s s</span></td>' % (color_block, int(calc_width), round(val, 2))
-                output += "</tr>"
-                cnt += 1
-            output += '</table>'
-            output += '</div>'
-        print tmpl % (output,)
+                value = row[field]
+                # 0.0 means it failed
+                if value == "0.0":
+                    field_values.append((field, "FAIL"))
+                    continue
+                if len(value) == 0:
+                    field_values.append((field, None))
+                    continue
+                s = float(value)
+                if s > xmax: 
+                    xmax = s
+                field_values.append((field, s))
+
+            charts_output += html_chart(row["Benchmark"], field_values, xmax)
+        print tmpl % (charts_output,)
 
 def usage():
     print """
