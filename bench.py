@@ -228,13 +228,14 @@ class Bencher:
         new.merge([self.bench_command(command, cwd) for x in range(0, self.count)])
         return new
 
-    def bench_entry(self, name, entry):
+    def bench_entry(self, name, entry, perform_clean = True):
         # If benching this language is disabled, stop
         if not entry.name in config.general.active_languages:
             print "Unsupported language", entry.name
             return
-        entry.clean()
-        entry.prebuild()
+        if perform_clean:
+            entry.clean()
+            entry.prebuild()
         command = entry.build()
         print "Benching Compile: ", name, entry.name
         compile_bench = self.bench_command(command, entry.build_cwd())
@@ -350,7 +351,9 @@ def make_benches():
         title = config.titles.json_title
         bencher.bench_entry(title, builder("json_swift.swift"))
         bencher.bench_entry(title, CargoBuildSystem("json_rust", config.directories.source_directory, config.directories.build_directory))
+        bencher.bench_entry(title + "_PB", CargoBuildSystem("json_rust", config.directories.source_directory, config.directories.build_directory), perform_clean = False)
         bencher.bench_entry(title, GradleBuildSystem("json_kotlin", config.directories.source_directory, config.directories.build_directory))
+        bencher.bench_entry(title + "_PB", GradleBuildSystem("json_kotlin", config.directories.source_directory, config.directories.build_directory), perform_clean = False)
 
     bencher.write_bench_csv(config.directories.bench_csv_directory)
     bencher.write_bench_pickle(config.directories.bench_csv_directory)
@@ -384,7 +387,7 @@ def make_charts():
 def make_html_charts(filename):
     """Goes through all the csv files, and renders them as html charts. Terrible Code."""
     colors = [
-            ["Navy", "#001f3f", "#000e2e"],
+            #["Navy", "#001f3f", "#000e2e"],
             ["Blue", "#0074D9", "#0063c8"],
             ["Aqua", "#7FDBFF", "#6ecaee"],
             ["Maroon", "#85144b", "#74033a"],
@@ -397,8 +400,13 @@ def make_html_charts(filename):
   font-family: -apple-system, "avenir next", avenir, roboto, noto, ubuntu, "helvetica neue", helvetica, arial, sans-serif;
   font-size: 15px;
     }
+h3 {
+font-size: 24px;
+font-weight: 300;
+}
     div.chart {
-    padding: 5px;
+    margin: 15px;
+    padding: 15px;
     background-color: #fafafa;
     border: 1px solid #ddd;
     }
@@ -413,7 +421,8 @@ def make_html_charts(filename):
   border-radius: 3px;
 }
 .row-title {
-  font-weight: bold;
+height: 50px;
+padding-right: 10px;
 }
 .bar {
 float: left;
@@ -421,9 +430,9 @@ float: left;
 table {
 }
 span.time {
-  font-weight: bold;
-  font-size: 13px;
-  padding-top: 10px;
+  font-weight: medium;
+  font-size: 15px;
+  padding-top: 7px;
   padding-left: 3px;
 float: left;
 }
@@ -431,12 +440,13 @@ float: left;
     name = os.path.splitext(os.path.basename(filename))[0]
     output = ""
     with open(filename, "r") as csvfile:
+        max_width = 700
+        chart_title_width = 60
+        chart_sec_width = 70
         reader = csv.DictReader(csvfile)
         fields = reader.fieldnames
-        output += "<div class='charts'><h2>%s</h2>" % (filename,)
-        max_width = 700
-        chart_title_width = 50
-        chart_sec_width = 70
+        # we need some extra space
+        output += "<div style='width: %spx' class='charts'><h2>%s</h2>" % (max_width + chart_sec_width, filename,)
         for row in reader:
             output += "<div class='chart'><h3>%s</h3>" % (row["Benchmark"],)
             output += '<table class="chart" style="width: %spx">' % (max_width,)
