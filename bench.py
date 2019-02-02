@@ -187,21 +187,48 @@ class Bencher:
     def __init__(self, count):
         self.count = count
 
-    def split_load(self, line, result):
-        """parse the bench results into real, user, sys and apply to result"""
-        comps = line.split()
-        result.real = float(comps[0])
-        result.user = float(comps[2])
-        result.sys = float(comps[4])
+    def bench_for_system(self, command, result):
+        operating_system = platform.system()
+        if operating_system == "Linux":
+            return self.bench_for_linux(command, result)
+        elif operating_system == "Darwin":
+            return self.bench_for_darwin(command, result)
+        else:
+            print "Unknown Platform", operating_system
+            sys.exit()
+
+    def bench_for_darwin(self, command, result):
+        cmd = ["time", "-l"] + command.split()
+
+        def split_load(line, result):
+            """parse the bench results into real, user, sys and apply to result"""
+            comps = line.split()
+            result.real = float(comps[0])
+            result.user = float(comps[2])
+            result.sys = float(comps[4])
+
+        def parse_fn(output):
+            for line in output.split("\n"):
+                if line.find("real") >= 0 or line.find("user") >= 0 or line.find("sys") >= 0:
+                    split_load(line, result)
+                if line.find("maximum resident set size") >= 0:
+                    result.resident_set_size = int(line.split()[0])
+                if line.find("page reclaims") >= 0:
+                    result.page_reclaims = int(line.split()[0])
+        return (cmd, parse_fn)
+
+    def bench_for_linux(self, command, result):
+        pass
 
     def bench_command(self, command, cwd):
         """run a command and return the timing"""
         print "\t: %s" % (command,)
         result = BenchResult()
         result.command = command
+        (popen_command, parse_fn) = self.bench_for_system(command, result)
         # Make sure we don't run too long
         begin = time.time()
-        process = subprocess.Popen(["time", "-l"] + command.split(), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=cwd)
+        process = subprocess.Popen(popen_command, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, cwd=cwd)
         while True:
             if process.poll() != None:
                 break
@@ -211,16 +238,7 @@ class Bencher:
                 fail_result.is_fail = True
                 return fail_result
         output = process.stdout.read()
-        print "---"
-        print output
-        print "---"
-        for line in output.split("\n"):
-            if line.find("real") >= 0 or line.find("user") >= 0 or line.find("sys") >= 0:
-                self.split_load(line, result)
-            if line.find("maximum resident set size") >= 0:
-                result.resident_set_size = int(line.split()[0])
-            if line.find("page reclaims") >= 0:
-                result.page_reclaims = int(line.split()[0])
+        parse_fn(output)
         return result
 
     def multi_bench_command(self, command, cwd):
