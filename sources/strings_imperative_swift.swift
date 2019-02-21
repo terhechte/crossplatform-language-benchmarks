@@ -6,7 +6,9 @@ func test(_ contents: String) -> Int {
     for string in strings {
       let trimmed = string.trimmingCharacters(in: .whitespaces)
       guard let number = Int(trimmed) else { continue }
-      sum += number
+      if number < 100 {
+        sum += number
+      }
     }
     return sum
 }
