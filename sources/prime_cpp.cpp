@@ -2,7 +2,7 @@
 
 using std::cout;
 
-bool is_prime(int number) {
+inline bool is_prime(int number) {
   // C++ does not have a range struct
   // so this is obvously not a useful comparison.
   if (number <= 1) return false;
