@@ -72,7 +72,7 @@ class KotlinBuildSystem (BuildSystem):
     def build(self):
         outfile = self.infile.replace(".kt", "")
         self.outfile = outfile + ".kexe"
-        return "%s -opt %s -o %s" % (config.general.binary_kotlin, abspath(join(self.source_directory, self.infile)), abspath(join(self.out_directory, self.outfile)))
+        return "%s -opt -opt-in=kotlinx.cinterop.ExperimentalForeignApi %s -o %s" % (config.general.binary_kotlin, abspath(join(self.source_directory, self.infile)), abspath(join(self.out_directory, self.outfile)))
 
 class CBuildSystem (BuildSystem):
     name = "C"

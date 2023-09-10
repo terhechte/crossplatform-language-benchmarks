@@ -1,0 +1,15 @@
+Benchmark,C,Swift,C++,Rust
+Compile: Primes Functional,,0.22,0.4,0.11
+Primes Functional,,0.3,0.302,0.302
+Compile: Strings Functional,,0.52,0.57,0.17
+Strings Functional,,2.0479999999999996,0.11599999999999999,0.033999999999999996
+Compile: Strings Imperative,,0.47,0.5,0.17
+Strings Imperative,,2.0439999999999996,0.09200000000000001,0.033999999999999996
+Compile: Chunks Functional,0.08,0.41,,0.15
+Chunks Functional,0.15000000000000002,3.018,,0.34
+Compile: Chunks Imperative,0.08,0.31,,0.15
+Chunks Imperative,0.15000000000000002,0.27,,0.34400000000000003
+Compile: JSON,,0.48,,3.53
+JSON,,1.34,,0.06399999999999999
+Compile: JSON_PB,,,,0.04
+JSON_PB,,,,0.052000000000000005
